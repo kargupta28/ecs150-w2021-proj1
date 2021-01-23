@@ -30,3 +30,7 @@ This one website helped us a lot especially in figuing out how to do the
 extra feature implementation as we had issues with blank variables being 
 used for blank strings.
 
+#### Notes:
+We rushed the report a bit as we did not figure out phase 6 until really late.
+We did not have enough time to work on the report, but I hope our code 
+satisfies to your liking. 
