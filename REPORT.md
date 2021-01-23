@@ -30,7 +30,6 @@ Our high level design choice includes:
   2. We faced quite a few errors trying to properly use pointers, etc, so for example we made extra "cmmd" for strtok to use, and we save "cmd" for printing at the end.
   3. We made 1 parse function which parses all the commands perfectly in 1 go. We did this so command execution is easier.
   4. To pipe between not just 3, but infinite pipes, we made our "executeCmds" function recursive. It can handle crazy requests like "pwd | pwd | pwd | pwd | pwd | pwd | echo Hello World | pwd | grep World | wc -l".
-  5. 
 
 ### Sources Cited
 We used a sources, especially those provided in class, others include:
