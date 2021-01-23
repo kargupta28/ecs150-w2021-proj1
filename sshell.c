@@ -195,10 +195,13 @@ Command parseSpecialVar(Command command, int* retval) {
                 // output "Error: invalid variable name"
                 //printf("Error #1\n");
                 retval = 1;
+                printf("Error: invalid variable name\n");
+                return command;
             } else if (command.argv[i][1] < 97 & command.argv[i][1] > 122) { // or $=
-                // output "Error: invalid variable name"
                 //printf("Error #2\n");
                 retval = 1;
+                printf("Error: invalid variable name\n");
+                return command;
             } else { // else it's just $a
                 if (strlen(specialVars[command.argv[i][1] - 97]) > 0 ) {
                     //printf("Block #1: %s - %s\n", command.argv[i], specialVars[command.argv[i][1] - 97]);
@@ -219,7 +222,7 @@ Command parseSpecialVar(Command command, int* retval) {
 
 void executeCmds(Command command[], int retvals[], int i, int inputFd) {
     //printRetVals(retvals, i);
-    printf("exeCmds i: %i\n", i);
+    //printf("exeCmds i: %i\n", i);
 
     int retval = -1;
     FILE *fp;
@@ -251,9 +254,10 @@ void executeCmds(Command command[], int retvals[], int i, int inputFd) {
     /* Builtin command */
     if (!strcmp(command[i].argv[0], "exit")) {
         fprintf(stderr, "Bye...\n");
-        //fprintf(stderr,"+ completed \'%s\' [%d]\n", command[i].argv[0], 0); // DO this in main with retvals[]
+        fprintf(stderr,"+ completed \'%s\' [%d]\n", command[i].argv[0], 0); // DO this in main with retvals[]
         fflush(stdout);
-        retval = 0; // need to END HERE
+        retval = -2; // need to END HERE
+        exit(1);
     } else if (!strcmp(command[i].argv[0], "pwd")) {
         retval = printPwd();
     } else if (!strcmp(command[i].argv[0], "cd")) {
@@ -280,8 +284,9 @@ void executeCmds(Command command[], int retvals[], int i, int inputFd) {
                 close(pipeFd[1]); // close writing end
                 close(inputFd);
 
-                retval = execvp(command[i].argv[0], command[i].argv);
-                perror("execv");
+                //command[i].argv = {command[i].argv, "2>", "/dev/null"};
+                execvp(command[i].argv[0], command[i].argv);
+                //perror("execv");
                 //return 1; // exit here ?? use exit(1) / exit(0)??
             } else if (pid > 0) {
                 // Parent 1
@@ -289,13 +294,12 @@ void executeCmds(Command command[], int retvals[], int i, int inputFd) {
                 waitpid(pid, &status, 0);
                 //wait(NULL); // doing this for making sure I wait for first command so I get it's retval to store in retvals[i] before I increment i.
                 retvals[i++] = status;
-                printf("Cmd: %s; Retval: %i\n", command[i].argv[0], status);
+                //printf("Cmd: %s; Retval: %i\n", command[i].argv[0], status);
 
                 close(pipeFd[1]); // look Child 1 for reference
                 //dup2(pipeFd[0], 0);
                 //close(pipeFd[0]);
                 close(inputFd);
-
                 executeCmds(command, retvals, i, pipeFd[0]);
 
             } else if (pid == -1) {
@@ -307,8 +311,9 @@ void executeCmds(Command command[], int retvals[], int i, int inputFd) {
 
             if (pid == 0) {
                 // Child
-                retval = execvp(command[i].argv[0], command[i].argv);
-                perror("execv");
+                //command[i].argv = {command[i].argv, "2>", "/dev/null"};
+                execvp(command[i].argv[0], command[i].argv);
+                //perror("execv");
                 //return 1; // exit here ?? use exit(1) / exit(0)??
             } else if (pid > 0) {
                 // Parent
@@ -406,10 +411,6 @@ int main(void)
 
                 resetSTD();
 
-                if (retval == -2) {
-                    break;
-                }
-
                 fprintf(stderr,"+ completed \'%s\' ", cmd); // change to cmd <<<-----
 
                 for (int i = 0; i < cmd_size; i++) {
@@ -419,6 +420,10 @@ int main(void)
                 }
                 fprintf(stderr,"\n");
                 fflush(stdout);
+
+                if (retvals[cmd_size-1] == -2) {
+                    break;
+                }
         }
 
         return EXIT_SUCCESS;
